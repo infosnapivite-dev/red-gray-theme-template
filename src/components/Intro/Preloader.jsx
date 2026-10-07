@@ -3,8 +3,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { PichwaiLotus } from "../Shared/PichwaiMotifs";
 
 /**
- * PRELOADER COMPONENT
- * PRD #9: Botanical SVG drawing, monogram, luxury ivory background, percentage counter
+ * ROYAL PRELOADER COMPONENT
+ * Botanical SVG drawing, auspicious Sanskrit invocation, royal monogram, and luxury gold progress.
  */
 export function Preloader({ onComplete }) {
   const [progress, setProgress] = useState(0);
@@ -19,15 +19,15 @@ export function Preloader({ onComplete }) {
             setIsDone(true);
             setTimeout(() => {
               onComplete?.();
-            }, 600);
-          }, 300);
+            }, 500);
+          }, 200);
           return 100;
         }
-        // Smooth non-linear increment
-        const increment = Math.floor(Math.random() * 8) + 4;
+        // Snappy smooth non-linear increment
+        const increment = Math.floor(Math.random() * 10) + 6;
         return Math.min(prev + increment, 100);
       });
-    }, 45);
+    }, 38);
 
     return () => clearInterval(timer);
   }, [onComplete]);
@@ -38,30 +38,52 @@ export function Preloader({ onComplete }) {
         <motion.div
           key="preloader"
           initial={{ opacity: 1 }}
-          exit={{ opacity: 0, y: -20 }}
-          transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-          className="absolute inset-0 z-50 flex flex-col items-center justify-center paper-texture"
-          style={{ backgroundColor: "var(--color-ivory)" }}
+          exit={{ opacity: 0, scale: 1.02 }}
+          transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+          className="absolute inset-0 z-50 flex flex-col items-center justify-center paper-texture select-none"
+          style={{
+            backgroundColor: "#FAF7EE",
+            backgroundImage: "url(/assets/background.webp)",
+            backgroundSize: "cover",
+            backgroundPosition: "center top",
+          }}
         >
-          {/* Subtle Outer Frame */}
-          <div className="absolute inset-4 md:inset-8 border border-[rgba(197,160,89,0.2)] pointer-events-none" />
+          {/* Subtle Royal Inset Frame */}
+          <div className="absolute inset-4 md:inset-6 border border-[#C5A059]/40 rounded-sm pointer-events-none" style={{ borderStyle: "dashed" }} />
+
+          {/* Auspicious Invocation */}
+          <motion.span
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            style={{
+              fontFamily: "'Cinzel', Georgia, serif",
+              fontSize: "0.54rem",
+              letterSpacing: "0.26em",
+              color: "#801B26",
+              fontWeight: 700,
+              marginBottom: "12px",
+            }}
+          >
+            ॥ श्री गणेशाय नमः ॥
+          </motion.span>
 
           {/* Animated Botanical Lotus */}
           <motion.div
-            initial={{ scale: 0.85, opacity: 0 }}
+            initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            transition={{ duration: 0.8 }}
-            className="mb-6 relative"
+            transition={{ duration: 0.7 }}
+            className="mb-4 relative"
           >
-            <PichwaiLotus size={84} animate={true} color="#C5A059" />
+            <PichwaiLotus size={76} animate={true} color="#C5A059" />
           </motion.div>
 
-          {/* Monogram */}
+          {/* Royal Monogram */}
           <motion.h2
-            initial={{ opacity: 0, y: 10 }}
+            initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-            className="royal-heading text-xl md:text-2xl text-[#C5A059] tracking-[0.25em] mb-2"
+            transition={{ duration: 0.6, delay: 0.15 }}
+            className="royal-heading text-2xl text-[#801B26] tracking-[0.22em] mb-1 font-semibold"
           >
             A & A
           </motion.h2>
@@ -70,25 +92,25 @@ export function Preloader({ onComplete }) {
           <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ duration: 0.6, delay: 0.35 }}
-            className="text-xs uppercase tracking-[0.3em] text-[#7A7672] font-medium mb-6"
-            style={{ fontFamily: "var(--font-sans)" }}
+            transition={{ duration: 0.6, delay: 0.25 }}
+            className="text-[0.48rem] uppercase tracking-[0.28em] text-[#7A7672] font-semibold mb-5"
+            style={{ fontFamily: "'Cinzel', Georgia, serif" }}
           >
             Preparing Your Royal Invitation
           </motion.p>
 
-          {/* Progress Indicator */}
-          <div className="w-44 h-[1.5px] bg-[#EAE3D6] relative overflow-hidden mb-3">
+          {/* Gold Progress Bar */}
+          <div className="w-40 h-[1.8px] bg-[#E5DFC9] relative overflow-hidden mb-2 rounded-full">
             <motion.div
-              className="absolute top-0 left-0 bottom-0 bg-[#C5A059]"
+              className="absolute top-0 left-0 bottom-0 bg-gradient-to-r from-[#C5A059] via-[#FFE7A8] to-[#C5A059]"
               style={{ width: `${progress}%` }}
               transition={{ ease: "easeOut" }}
             />
           </div>
 
           <span
-            className="text-xs tracking-widest text-[#9A783E] font-medium"
-            style={{ fontFamily: "var(--font-sans)" }}
+            className="text-[0.46rem] tracking-[0.2em] text-[#9A783E] font-bold"
+            style={{ fontFamily: "'Cinzel', Georgia, serif" }}
           >
             {progress}%
           </span>
@@ -97,3 +119,5 @@ export function Preloader({ onComplete }) {
     </AnimatePresence>
   );
 }
+
+export default Preloader;

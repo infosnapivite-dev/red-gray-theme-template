@@ -149,6 +149,68 @@ class AmbientSoundscape {
     }
   }
 
+  playUnsealEffect() {
+    try {
+      this.initContext();
+      if (!this.audioCtx) return;
+      if (this.audioCtx.state === "suspended") {
+        this.audioCtx.resume();
+      }
+
+      const now = this.audioCtx.currentTime;
+
+      // 1. Crystal Chime Resonance (Golden chime on breaking the seal)
+      const chimeFreqs = [587.33, 880.0, 1174.66, 1760.0]; // D5, A5, D6, A6 harmonics
+      chimeFreqs.forEach((freq, idx) => {
+        const osc = this.audioCtx.createOscillator();
+        const gain = this.audioCtx.createGain();
+        osc.type = "sine";
+        osc.frequency.setValueAtTime(freq, now + idx * 0.04);
+
+        gain.gain.setValueAtTime(0.0001, now + idx * 0.04);
+        gain.gain.exponentialRampToValueAtTime(0.08 / (idx + 1), now + idx * 0.04 + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.00001, now + idx * 0.04 + 1.2);
+
+        osc.connect(gain);
+        gain.connect(this.audioCtx.destination);
+
+        osc.start(now + idx * 0.04);
+        osc.stop(now + idx * 0.04 + 1.3);
+      });
+
+      // 2. Paper Unfold / Flap Rustle (Soft organic white noise through bandpass)
+      const bufferSize = this.audioCtx.sampleRate * 0.6;
+      const buffer = this.audioCtx.createBuffer(1, bufferSize, this.audioCtx.sampleRate);
+      const output = buffer.getChannelData(0);
+      for (let i = 0; i < bufferSize; i++) {
+        output[i] = (Math.random() * 2 - 1) * 0.12;
+      }
+
+      const whiteNoise = this.audioCtx.createBufferSource();
+      whiteNoise.buffer = buffer;
+
+      const filter = this.audioCtx.createBiquadFilter();
+      filter.type = "bandpass";
+      filter.frequency.setValueAtTime(1200, now);
+      filter.frequency.exponentialRampToValueAtTime(600, now + 0.5);
+      filter.Q.setValueAtTime(1.2, now);
+
+      const noiseGain = this.audioCtx.createGain();
+      noiseGain.gain.setValueAtTime(0.001, now);
+      noiseGain.gain.exponentialRampToValueAtTime(0.12, now + 0.08);
+      noiseGain.gain.exponentialRampToValueAtTime(0.00001, now + 0.55);
+
+      whiteNoise.connect(filter);
+      filter.connect(noiseGain);
+      noiseGain.connect(this.audioCtx.destination);
+
+      whiteNoise.start(now);
+      whiteNoise.stop(now + 0.6);
+    } catch (e) {
+      console.warn("Unseal sound unavailable:", e);
+    }
+  }
+
   toggle(audioSrc = null) {
     if (this.isPlaying) {
       this.stop();
@@ -161,3 +223,4 @@ class AmbientSoundscape {
 }
 
 export const ambientSound = new AmbientSoundscape();
+export const playUnsealSound = () => ambientSound.playUnsealEffect();

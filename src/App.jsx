@@ -52,54 +52,32 @@ const PAGE_TITLES = {
 };
 
 export default function App() {
-  const getInitialPage = () => {
-    if (typeof window !== "undefined") {
-      const urlParams = new URLSearchParams(window.location.search);
-      if (urlParams.get("event")) {
-        return "events";
-      }
-      const pageParam = urlParams.get("page");
-      if (pageParam && ALL_PAGES.includes(pageParam)) {
-        return pageParam;
-      }
-      const hash = window.location.hash.replace("#", "");
-      if (hash && ALL_PAGES.includes(hash)) {
-        return hash;
-      }
-    }
-    return "home";
-  };
-
-  const getDirectHashState = () => {
-    if (typeof window !== "undefined") {
-      const urlParams = new URLSearchParams(window.location.search);
-      if (urlParams.get("event")) {
-        return true;
-      }
-      const pageParam = urlParams.get("page");
-      if (pageParam && ALL_PAGES.includes(pageParam)) {
-        return true;
-      }
-      const hash = window.location.hash.replace("#", "");
-      if (hash && ALL_PAGES.includes(hash)) {
-        return true;
-      }
-      if (sessionStorage.getItem("intro_completed") === "true") {
-        return true;
-      }
-    }
-    return false;
-  };
-
-  const initialPage = getInitialPage();
-  const shouldSkipIntro = getDirectHashState();
-
-  const [preloaderDone, setPreloaderDone] = useState(shouldSkipIntro);
-  const [introCompleted, setIntroCompleted] = useState(shouldSkipIntro);
-  const [currentPage, setCurrentPage] = useState(initialPage);
+  const [preloaderDone, setPreloaderDone] = useState(false);
+  const [introCompleted, setIntroCompleted] = useState(false);
+  const [currentPage, setCurrentPage] = useState("home");
   const [viewportHeight, setViewportHeight] = useState(null);
 
   const mainViewportRef = useRef(null);
+
+  // Always reset to top and clean URL hash/query on initial load/reload so user always lands on opening page
+  useEffect(() => {
+    if (typeof window !== "undefined" && "scrollRestoration" in window.history) {
+      window.history.scrollRestoration = "manual";
+    }
+
+    try {
+      sessionStorage.removeItem("intro_completed");
+    } catch (e) {}
+
+    if (window.location.hash || window.location.search) {
+      window.history.replaceState(null, "", window.location.pathname);
+    }
+
+    window.scrollTo({ top: 0, behavior: "instant" });
+    if (mainViewportRef.current) {
+      mainViewportRef.current.scrollTo({ top: 0, behavior: "instant" });
+    }
+  }, []);
 
   // Lock scrolling when on dedicated fixed single-viewport pages (Events, Gallery, Venue)
   useEffect(() => {
@@ -148,7 +126,7 @@ export default function App() {
   // Navigate directly to the Invitation Index / Chapters card section inside Home view
   const navigateToIndexSection = useCallback((smooth = false) => {
     setCurrentPage("home");
-    window.history.pushState(null, "", " ");
+    window.history.pushState(null, "", window.location.pathname);
 
     const scrollToTarget = () => {
       const el = document.getElementById("invitation-index");
@@ -169,9 +147,11 @@ export default function App() {
     });
   }, [viewportHeight]);
 
-  // Handle browser back / forward navigation
+  // Handle browser back / forward navigation during session
   useEffect(() => {
     const handlePopState = () => {
+      if (!introCompleted) return;
+
       const hash = window.location.hash.replace("#", "");
       if (hash === "index") {
         navigateToIndexSection(false);
@@ -192,24 +172,10 @@ export default function App() {
 
     window.addEventListener("popstate", handlePopState);
     return () => window.removeEventListener("popstate", handlePopState);
-  }, [navigateToIndexSection]);
-
-  // If loaded with ?page=index or #index, automatically scroll to index card section
-  useEffect(() => {
-    if (typeof window !== "undefined" && introCompleted) {
-      const hash = window.location.hash.replace("#", "");
-      const pageParam = new URLSearchParams(window.location.search).get("page");
-      if (hash === "index" || pageParam === "index") {
-        navigateToIndexSection(false);
-      }
-    }
   }, [introCompleted, navigateToIndexSection]);
 
   // Envelope opening finished -> enter Home view
   const handleEnvelopeComplete = useCallback(() => {
-    try {
-      sessionStorage.setItem("intro_completed", "true");
-    } catch (e) {}
     setIntroCompleted(true);
     setCurrentPage("home");
   }, []);
@@ -223,7 +189,7 @@ export default function App() {
     const target = ALL_PAGES.includes(pageId) ? pageId : "home";
     setCurrentPage(target);
     if (target === "home") {
-      window.history.pushState(null, "", " ");
+      window.history.pushState(null, "", window.location.pathname);
     } else {
       window.history.pushState(null, "", `#${target}`);
     }
@@ -242,9 +208,10 @@ export default function App() {
     if (mainViewportRef.current) {
       mainViewportRef.current.scrollTo({ top: 0, behavior: "instant" });
     }
-    window.history.pushState(null, "", " ");
+    window.history.replaceState(null, "", window.location.pathname);
     setCurrentPage("home");
     setIntroCompleted(false);
+    setPreloaderDone(true);
   }, []);
 
   // Scroll to top helper
